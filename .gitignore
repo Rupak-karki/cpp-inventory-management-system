@@ -4,3 +4,6 @@
 
 # VS Code local settings
 .vscode/
+
+# Program output and runtime data
+inventory.txt
