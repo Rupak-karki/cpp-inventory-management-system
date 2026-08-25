@@ -2,6 +2,7 @@
 #include <fstream>
 #include <conio.h>
 #include <string>
+#include <iomanip> // Needed for clean columns in viewInventory() 
 #include <cstdlib>
 
 using namespace std;
@@ -9,8 +10,7 @@ using namespace std;
 void addProduct();
 void viewInventory();
 
-// Global variables to hold information temporarily during input/output
-string name, productID, batch, price, qty, expiry; 
+string name, productID, batch, price, qty, expiry;
 
 int main() {
     while (true) {
@@ -56,6 +56,7 @@ int main() {
     }
 }
 
+
 void addProduct() {
     system("cls");
 
@@ -67,14 +68,14 @@ void addProduct() {
         getch();
         return;
     }
-    
+
     cout << "\n\tEnter product details\n\n";
     cout << "\n\tEnter product name: ";
     cin >> name;
-    
+
     cout << "\n\tProduct ID: ";
     cin >> productID;
-    
+
     cout << "\tEnter batch number: ";
     cin >> batch;
 
@@ -83,12 +84,12 @@ void addProduct() {
 
     cout << "\tEnter quantity: ";
     cin >> qty;
-    
-    cout << "\tExpiry Date (yyyymmdd): ";
-	 cin >> expiry;
 
-    // Write space-separated values onto a new line
-    file << name << " " << productID << " " << batch << " " << price << " " << qty << " " << expiry << endl;
+    cout << "\tExpiry Date (yyyymmdd): ";
+    cin >> expiry;
+
+    file << name << " " << productID << " " << batch << " "
+         << price << " " << qty << " " << expiry << endl;
 
     file.close();
 
@@ -100,6 +101,47 @@ void addProduct() {
 void viewInventory() {
     system("cls");
 
-    cout << "\n\tPress any key to return to the menu.";
+    ifstream file("inventory.txt");
+
+    if (!file) {
+        cout << "\n\tNo inventory file found.";
+        cout << "\n\tPress any key to return to the menu.";
+        getch();
+        return;
+    }
+
+    bool found = false;
+        cout << "\n\n\t\tCurrent Inventory\n";
+    cout << "\t\t=================\n\n";
+    
+    // Print headers formatted into neat columns
+    cout << left << setw(15) << "Name"
+         << setw(15) << "Product ID"
+         << setw(15) << "Batch"
+         << setw(12) << "Price"
+         << setw(12) << "Quantity"
+         << setw(12) << "Expiry" << endl;
+
+    cout << "--------------------------------------------------------------------------\n";
+    
+    // Read the file line by line matching  data layout
+    while (file >> name >> productID >> batch >> price >> qty >> expiry) {
+        found = true;
+
+        cout << left << setw(15) << name
+             << setw(15) << productID
+             << setw(15) << batch
+             << setw(12) << price
+             << setw(12) << qty
+             << setw(12) << expiry << endl;
+    }
+
+    if (!found) {
+        cout << "\n\tInventory is empty.";
+    }
+
+    file.close();
+
+    cout << "\n\n\tPress any key to return to the menu.";
     getch();
 }
