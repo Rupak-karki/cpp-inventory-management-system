@@ -2,13 +2,14 @@
 #include <fstream>
 #include <conio.h>
 #include <string>
-#include <iomanip> // Needed for clean columns in viewInventory() 
+#include <iomanip>
 #include <cstdlib>
 
 using namespace std;
 
 void addProduct();
 void viewInventory();
+void searchProduct(); // New search function declaration
 
 string name, productID, batch, price, qty, expiry;
 
@@ -22,14 +23,15 @@ int main() {
         cout << "\t===========================\n";
         cout << "\n\t1. Add Product";
         cout << "\n\t2. View Inventory";
-        cout << "\n\t3. Exit";
+        cout << "\n\t3. Search Product";  // Added to menu UI
+        cout << "\n\t4. Exit";
         cout << "\n\n\tChoose an option: ";
 
         if (!(cin >> choice)) {
             cin.clear();
             cin.ignore(10000, '\n');
 
-            cout << "\n\tInvalid input! Please enter a number 1-3.\n";
+            cout << "\n\tInvalid input! Please enter a number 1-4.\n";
             cout << "\n\tPress any key to return to the menu...";
             getch();
             continue;
@@ -45,6 +47,10 @@ int main() {
                 break;
 
             case 3:
+                searchProduct(); // Directs to the search engine 
+                break;
+
+            case 4:
                 cout << "\n\tExiting program...\n";
                 return 0;
 
@@ -55,7 +61,6 @@ int main() {
         }
     }
 }
-
 
 void addProduct() {
     system("cls");
@@ -111,10 +116,9 @@ void viewInventory() {
     }
 
     bool found = false;
-        cout << "\n\n\t\tCurrent Inventory\n";
+
+    cout << "\n\n\t\tCurrent Inventory\n";
     cout << "\t\t=================\n\n";
-    
-    // Print headers formatted into neat columns
     cout << left << setw(15) << "Name"
          << setw(15) << "Product ID"
          << setw(15) << "Batch"
@@ -123,8 +127,7 @@ void viewInventory() {
          << setw(12) << "Expiry" << endl;
 
     cout << "--------------------------------------------------------------------------\n";
-    
-    // Read the file line by line matching  data layout
+
     while (file >> name >> productID >> batch >> price >> qty >> expiry) {
         found = true;
 
@@ -142,6 +145,49 @@ void viewInventory() {
 
     file.close();
 
-    cout << "\n\n\tPress any key to return to the menu.";
+    cout << "\n\tPress any key to return to the menu.";
+    getch();
+}
+
+void searchProduct() {
+    system("cls");
+
+    ifstream file("inventory.txt");
+
+    if (!file) {
+        cout << "\n\tNo inventory file found.";
+        cout << "\n\tPress any key to return to the menu.";
+        getch();
+        return;
+    }
+    cout << "\n\t==================== Search Engine ====================\n"
+    string searchName;
+    bool found = false;
+
+    cout << "\n\tEnter product name to search: ";
+    cin >> searchName;
+
+    while (file >> name >> productID >> batch >> price >> qty >> expiry) {
+        if (name == searchName) {
+            cout << "\n\tProduct Found\n";
+            cout << "\t=============\n";
+            cout << "\tName: " << name << endl;
+            cout << "\tProduct ID: " << productID << endl;
+            cout << "\tBatch No: " << batch << endl;
+            cout << "\tPrice: " << price << endl;
+            cout << "\tQuantity: " << qty << endl;
+            cout << "\tExpiry: " << expiry << endl;
+            found = true;
+            break;
+        }
+    }
+
+    if (!found) {
+        cout << "\n\tProduct not found.";
+    }
+
+    file.close();
+
+    cout << "\n\tPress any key to return to the menu.";
     getch();
 }
