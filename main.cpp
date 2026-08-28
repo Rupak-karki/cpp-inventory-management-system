@@ -160,24 +160,25 @@ void searchProduct() {
         getch();
         return;
     }
-    cout << "\n\t==================== Search Engine ====================\n"
-    string searchName;
+
+    string searchID;
     bool found = false;
 
-    cout << "\n\tEnter product name to search: ";
-    cin >> searchName;
+    cout << "\n\tEnter Product ID to search: ";
+    cin >> searchID;
 
     while (file >> name >> productID >> batch >> price >> qty >> expiry) {
-        if (name == searchName) {
-            cout << "\n\tProduct Found\n";
-            cout << "\t=============\n";
-            cout << "\tName: " << name << endl;
-            cout << "\tProduct ID: " << productID << endl;
-            cout << "\tBatch No: " << batch << endl;
-            cout << "\tPrice: " << price << endl;
-            cout << "\tQuantity: " << qty << endl;
-            cout << "\tExpiry: " << expiry << endl;
+        if (productID == searchID) {
             found = true;
+
+            cout << "\n\n\tProduct Found";
+            cout << "\n\t=============";
+            cout << "\n\tName        : " << name;
+            cout << "\n\tProduct ID  : " << productID;
+            cout << "\n\tBatch       : " << batch;
+            cout << "\n\tPrice       : " << price;
+            cout << "\n\tQuantity    : " << qty;
+            cout << "\n\tExpiry Date : " << expiry;
             break;
         }
     }
@@ -188,6 +189,6 @@ void searchProduct() {
 
     file.close();
 
-    cout << "\n\tPress any key to return to the menu.";
+    cout << "\n\n\tPress any key to return to the menu.";
     getch();
 }
