@@ -4,12 +4,14 @@
 #include <string>
 #include <iomanip>
 #include <cstdlib>
+#include <cstdio>
 
 using namespace std;
 
 void addProduct();
 void viewInventory();
-void searchProduct(); // New search function declaration
+void searchProduct();
+void updateProduct(); // New update function declaration
 
 string name, productID, batch, price, qty, expiry;
 
@@ -23,15 +25,16 @@ int main() {
         cout << "\t===========================\n";
         cout << "\n\t1. Add Product";
         cout << "\n\t2. View Inventory";
-        cout << "\n\t3. Search Product";  // Added to menu UI
-        cout << "\n\t4. Exit";
+        cout << "\n\t3. Search Product";
+        cout << "\n\t4. Update Product"; // Added to menu UI
+        cout << "\n\t5. Exit";
         cout << "\n\n\tChoose an option: ";
 
         if (!(cin >> choice)) {
             cin.clear();
             cin.ignore(10000, '\n');
 
-            cout << "\n\tInvalid input! Please enter a number 1-4.\n";
+            cout << "\n\tInvalid input! Please enter a number 1-5.\n";
             cout << "\n\tPress any key to return to the menu...";
             getch();
             continue;
@@ -47,10 +50,14 @@ int main() {
                 break;
 
             case 3:
-                searchProduct(); // Directs to the search engine 
+                searchProduct();
                 break;
 
             case 4:
+                updateProduct(); // Directs to update logic
+                break;
+
+            case 5:
                 cout << "\n\tExiting program...\n";
                 return 0;
 
@@ -172,13 +179,13 @@ void searchProduct() {
             found = true;
 
             cout << "\n\n\tProduct Found";
-            cout << "\n\t=============";
-            cout << "\n\tName        : " << name;
-            cout << "\n\tProduct ID  : " << productID;
-            cout << "\n\tBatch       : " << batch;
-            cout << "\n\tPrice       : " << price;
-            cout << "\n\tQuantity    : " << qty;
-            cout << "\n\tExpiry Date : " << expiry;
+            cout << "\n\t=============\n";
+            cout << "\tName        : " << name << endl;
+            cout << "\tProduct ID  : " << productID << endl;
+            cout << "\tBatch       : " << batch << endl;
+            cout << "\tPrice       : " << price << endl;
+            cout << "\tQuantity    : " << qty << endl;
+            cout << "\tExpiry Date : " << expiry << endl;
             break;
         }
     }
@@ -190,5 +197,75 @@ void searchProduct() {
     file.close();
 
     cout << "\n\n\tPress any key to return to the menu.";
+    getch();
+}
+
+void updateProduct() {
+    system("cls");
+
+    ifstream file("inventory.txt");
+    ofstream temp("temp.txt");     // Create a temporary file to stage our updated data
+
+    if (!file || !temp) {
+        cout << "\n\tUnable to open inventory files.";
+        cout << "\n\tPress any key to return to the menu.";
+        getch();
+        return;
+    }
+
+    string searchID;
+    string newBatch, newPrice, newQty, newExpiry;
+    bool found = false;
+
+    cout << "\n\t==================== Update Product ====================\n";
+    cout << "\n\tEnter Product ID to update: ";
+    cin >> searchID;
+
+    while (file >> name >> productID >> batch >> price >> qty >> expiry) {
+        if (productID == searchID) {
+            found = true;
+
+            cout << "\n\tCurrent product details\n";
+            cout << "\tName: " << name << endl;
+            cout << "\tID: " << productID << endl;           
+            cout << "\tBatch: " << batch << endl;
+            cout << "\tPrice: " << price << endl;
+            cout << "\tQuantity: " << qty << endl;
+            cout << "\tExpiry: " << expiry << endl;
+
+            cout << "\n\tEnter new batch number: ";
+            cin >> newBatch;
+
+            cout << "\tEnter new price: ";
+            cin >> newPrice;
+
+            cout << "\tEnter new quantity: ";
+            cin >> newQty;
+
+            cout << "\tEnter new expiry date (yyyymmdd): ";
+            cin >> newExpiry;
+
+            temp << name << " " << productID << " " << newBatch << " "
+                 << newPrice << " " << newQty << " " << newExpiry << endl;
+        } else {
+            temp << name << " " << productID << " " << batch << " "
+                 << price << " " << qty << " " << expiry << endl;
+        }
+    }
+
+    file.close();
+    temp.close();
+    
+    // Swap out the files to make changes permanent
+    remove("inventory.txt");
+    rename("temp.txt", "inventory.txt");
+
+    if (found) {
+        cout << "\n\tProduct updated successfully.";
+    } else {
+        cout << "\n\tProduct not found.";
+    }
+
+    cout << "\n\tPress any key to return to the menu.";
     getch();
 }
