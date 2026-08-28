@@ -5,6 +5,8 @@
 #include <iomanip>
 #include <cstdlib>
 #include <cstdio>
+#include <sstream> // For convenient numerical type conversions
+#include <ctime>  // for date and time handling
 
 using namespace std;
 
@@ -12,7 +14,8 @@ void addProduct();
 void viewInventory();
 void searchProduct();
 void updateProduct();
-void deleteProduct(); // New deletion function declaration
+void deleteProduct();
+void sellProduct(); // New selling function declaration
 
 string name, productID, batch, price, qty, expiry;
 
@@ -28,15 +31,16 @@ int main() {
         cout << "\n\t2. View Inventory";
         cout << "\n\t3. Search Product";
         cout << "\n\t4. Update Product";
-        cout << "\n\t5. Delete Product"; // Added to menu UI
-        cout << "\n\t6. Exit";
+        cout << "\n\t5. Delete Product";
+        cout << "\n\t6. Sell Product"; // Added to menu UI
+        cout << "\n\t7. Exit";
         cout << "\n\n\tChoose an option: ";
 
         if (!(cin >> choice)) {
             cin.clear();
             cin.ignore(10000, '\n');
 
-            cout << "\n\tInvalid input! Please enter a number 1-6.\n";
+            cout << "\n\tInvalid input! Please enter a number 1-7.\n";
             cout << "\n\tPress any key to return to the menu...";
             getch();
             continue;
@@ -60,10 +64,14 @@ int main() {
                 break;
 
             case 5:
-                deleteProduct(); // Directs to deletion module
+                deleteProduct();
                 break;
 
             case 6:
+                sellProduct();   // Directs to the checkout selling and billing panel
+                break;
+
+            case 7:
                 cout << "\n\tExiting program...\n";
                 return 0;
 
@@ -210,7 +218,7 @@ void updateProduct() {
     system("cls");
 
     ifstream file("inventory.txt");
-    ofstream temp("temp.txt");    
+    ofstream temp("temp.txt");     // Create a temporary file to stage our updated data
 
     if (!file || !temp) {
         cout << "\n\tUnable to open inventory files.";
@@ -337,6 +345,120 @@ void deleteProduct() {
             cout << "\n\tProduct not found.";
         } else {
             cout << "\n\tProduct was not deleted.";
+        }
+    }
+
+    cout << "\n\tPress any key to return to the menu.";
+    getch();
+}
+
+
+void sellProduct() {
+    system("cls");
+
+    ifstream file("inventory.txt");
+    ofstream temp("temp.txt");
+
+    if (!file || !temp) {
+        cout << "\n\tUnable to open inventory files.";
+        cout << "\n\tPress any key to return to the menu.";
+        getch();
+        return;
+    }
+
+    string searchID;
+    int sellQty;
+    bool found = false;
+    bool saleCompleted = false;
+
+    cout << "\n\t==================== Sell Product ====================\n";
+    cout << "\n\tEnter Product ID to sell: ";
+    cin >> searchID;
+
+    while (file >> name >> productID >> batch >> price >> qty >> expiry) {
+        if (productID == searchID && !found) {
+            found = true;
+
+            int availableQty = 0;
+            double unitPrice = 0.0;
+
+            stringstream(qty) >> availableQty;
+            stringstream(price) >> unitPrice;
+
+            cout << "\n\tProduct Found\n";
+            cout << "\tName: " << name << endl;
+            cout << "\tProduct ID: " << productID << endl;
+            cout << "\tBatch: " << batch << endl;
+            cout << "\tPrice: " << price << endl;
+            cout << "\tAvailable quantity: " << qty << endl;
+
+            cout << "\n\tEnter quantity to sell: ";
+
+            if (!(cin >> sellQty) || sellQty <= 0) {
+                cin.clear();
+                cin.ignore(10000, '\n');
+
+                cout << "\n\tEnter a valid quantity greater than zero.";
+            } else if (sellQty > availableQty) {
+                cout << "\n\tInsufficient stock.";
+            } else {
+                int remainingQty = availableQty - sellQty;
+                double totalPrice = sellQty * unitPrice;
+
+                stringstream updatedQty;
+                updatedQty << remainingQty;
+                qty = updatedQty.str();
+
+                cout << fixed << setprecision(2);
+                cout << "\n\tTotal price: " << totalPrice << endl;
+                cout << "\tSale completed successfully.";
+
+                ofstream bill("bill.txt", ios::app);
+
+                if (bill) {
+                    time_t now = time(0);
+                    tm* currentTime = localtime(&now);
+                    char timeText[20];
+
+                    strftime(timeText, sizeof(timeText),
+                             "%Y-%m-%d %H:%M:%S", currentTime);
+
+                    bill << fixed << setprecision(2);
+                    bill << "\n================ INVOICE ================\n";
+                    bill << "Date: " << timeText << endl;
+                    bill << "Product Name: " << name << endl;
+                    bill << "Product ID: " << productID << endl;
+                    bill << "Batch No: " << batch << endl;
+                    bill << "Quantity Sold: " << sellQty << endl;
+                    bill << "Price per Unit: " << unitPrice << endl;
+                    bill << "Total Price: " << totalPrice << endl;
+                    bill << "==========================================\n";
+                }
+
+                if (remainingQty == 0) {
+                    cout << "\n\tThe product is now out of stock.";
+                }
+
+                saleCompleted = true;
+            }
+        }
+
+        // Always retain the record, including products with quantity 0.
+        temp << name << " " << productID << " " << batch << " "
+             << price << " " << qty << " " << expiry << endl;
+    }
+
+    file.close();
+    temp.close();
+
+    if (saleCompleted) {
+        remove("inventory.txt");
+        rename("temp.txt", "inventory.txt");
+    } else {
+        remove("temp.txt");
+
+        if (!found) {
+            cout << "\n\tProduct ID not found.";
         }
     }
 
