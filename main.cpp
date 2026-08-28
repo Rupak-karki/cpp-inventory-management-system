@@ -5,8 +5,8 @@
 #include <iomanip>
 #include <cstdlib>
 #include <cstdio>
-#include <sstream> // For convenient numerical type conversions
-#include <ctime>  // for date and time handling
+#include <sstream> 
+#include <ctime>  
 
 using namespace std;
 
@@ -15,7 +15,8 @@ void viewInventory();
 void searchProduct();
 void updateProduct();
 void deleteProduct();
-void sellProduct(); // New selling function declaration
+void sellProduct();
+void checkExpiredProducts(); //for handling expired products
 
 string name, productID, batch, price, qty, expiry;
 
@@ -32,15 +33,16 @@ int main() {
         cout << "\n\t3. Search Product";
         cout << "\n\t4. Update Product";
         cout << "\n\t5. Delete Product";
-        cout << "\n\t6. Sell Product"; // Added to menu UI
-        cout << "\n\t7. Exit";
+        cout << "\n\t6. Sell Product"; 
+        cout << "\n\t7. Check & Remove Expired Products";
+        cout << "\n\t8. Exit";
         cout << "\n\n\tChoose an option: ";
 
         if (!(cin >> choice)) {
             cin.clear();
             cin.ignore(10000, '\n');
 
-            cout << "\n\tInvalid input! Please enter a number 1-7.\n";
+            cout << "\n\tInvalid input! Please enter a number 1-8.\n";
             cout << "\n\tPress any key to return to the menu...";
             getch();
             continue;
@@ -68,10 +70,12 @@ int main() {
                 break;
 
             case 6:
-                sellProduct();   // Directs to the checkout selling and billing panel
+                sellProduct();  
                 break;
-
             case 7:
+                checkExpiredProducts();
+                break;
+            case 8:
                 cout << "\n\tExiting program...\n";
                 return 0;
 
@@ -460,6 +464,63 @@ void sellProduct() {
         if (!found) {
             cout << "\n\tProduct ID not found.";
         }
+    }
+
+    cout << "\n\tPress any key to return to the menu.";
+    getch();
+}
+
+void checkExpiredProducts() {
+    system("cls");
+
+    ifstream file("inventory.txt");
+    ofstream temp("temp.txt");
+
+    if (!file || !temp) {
+        cout << "\n\tUnable to open inventory files.";
+        cout << "\n\tPress any key to return to the menu.";
+        getch();
+        return;
+    }
+    
+     // Fetch the system's current live time metrics
+    time_t now = time(0);
+    tm* currentTime = localtime(&now);
+    
+     // Format time directly into an 8-character string (YYYYMMDD)
+    char currentDate[9];
+    strftime(currentDate, sizeof(currentDate), "%Y%m%d", currentTime);
+
+    bool expiredFound = false;
+
+    cout << "\n\tChecking for expired products...\n";
+
+    while (file >> name >> productID >> batch >> price >> qty >> expiry) {
+        if (expiry < currentDate) {
+            expiredFound = true;
+
+            cout << "\n\tRemoved expired product: " << name;
+            cout << "\n\tProduct ID: " << productID;
+            cout << "\n\tExpiry Date: " << expiry << "\n";
+            continue;  // Skips writing this specific line to temp.txt, deleting it.
+        }
+
+        // Keep unexpired products safe
+        temp << name << " " << productID << " " << batch << " "
+             << price << " " << qty << " " << expiry << endl;
+    }
+
+    file.close();
+    temp.close();
+
+    if (expiredFound) {
+        remove("inventory.txt");
+        rename("temp.txt", "inventory.txt");
+        cout << "\n\t Database cleanup complete. Expired records purged successfully.";
+
+    } else {
+        remove("temp.txt");
+        cout << "\n\tScan complete. No expired products found.";
     }
 
     cout << "\n\tPress any key to return to the menu.";
