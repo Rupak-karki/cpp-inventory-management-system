@@ -11,7 +11,8 @@ using namespace std;
 void addProduct();
 void viewInventory();
 void searchProduct();
-void updateProduct(); // New update function declaration
+void updateProduct();
+void deleteProduct(); // New deletion function declaration
 
 string name, productID, batch, price, qty, expiry;
 
@@ -26,15 +27,16 @@ int main() {
         cout << "\n\t1. Add Product";
         cout << "\n\t2. View Inventory";
         cout << "\n\t3. Search Product";
-        cout << "\n\t4. Update Product"; // Added to menu UI
-        cout << "\n\t5. Exit";
+        cout << "\n\t4. Update Product";
+        cout << "\n\t5. Delete Product"; // Added to menu UI
+        cout << "\n\t6. Exit";
         cout << "\n\n\tChoose an option: ";
 
         if (!(cin >> choice)) {
             cin.clear();
             cin.ignore(10000, '\n');
 
-            cout << "\n\tInvalid input! Please enter a number 1-5.\n";
+            cout << "\n\tInvalid input! Please enter a number 1-6.\n";
             cout << "\n\tPress any key to return to the menu...";
             getch();
             continue;
@@ -54,10 +56,14 @@ int main() {
                 break;
 
             case 4:
-                updateProduct(); // Directs to update logic
+                updateProduct();
                 break;
 
             case 5:
+                deleteProduct(); // Directs to deletion module
+                break;
+
+            case 6:
                 cout << "\n\tExiting program...\n";
                 return 0;
 
@@ -204,7 +210,7 @@ void updateProduct() {
     system("cls");
 
     ifstream file("inventory.txt");
-    ofstream temp("temp.txt");     // Create a temporary file to stage our updated data
+    ofstream temp("temp.txt");    
 
     if (!file || !temp) {
         cout << "\n\tUnable to open inventory files.";
@@ -256,7 +262,6 @@ void updateProduct() {
     file.close();
     temp.close();
     
-    // Swap out the files to make changes permanent
     remove("inventory.txt");
     rename("temp.txt", "inventory.txt");
 
@@ -264,6 +269,75 @@ void updateProduct() {
         cout << "\n\tProduct updated successfully.";
     } else {
         cout << "\n\tProduct not found.";
+    }
+
+    cout << "\n\tPress any key to return to the menu.";
+    getch();
+}
+
+
+void deleteProduct() {
+    system("cls");
+
+    ifstream file("inventory.txt");
+    ofstream temp("temp.txt");
+
+    if (!file || !temp) {
+        cout << "\n\tUnable to open inventory files.";
+        cout << "\n\tPress any key to return to the menu.";
+        getch();
+        return;
+    }
+
+    cout << "\n\t==================== Delete Product ====================\n";
+
+    string searchID;
+    char confirmation;
+    bool found = false;
+    bool deleted = false;
+
+    cout << "\n\tEnter Product ID to delete: ";
+    cin >> searchID;
+
+    while (file >> name >> productID >> batch >> price >> qty >> expiry) {
+        if (productID == searchID && !found) {
+            found = true;
+
+            cout << "\n\tProduct Found\n";
+            cout << "\tName: " << name << endl;
+            cout << "\tProduct ID: " << productID << endl;
+            cout << "\tBatch: " << batch << endl;
+            cout << "\tQuantity: " << qty << endl;
+            cout << "\tExpiry: " << expiry << endl;
+
+            cout << "\n\tDelete this product? (y/n): ";
+            cin >> confirmation;
+
+            if (confirmation == 'y' || confirmation == 'Y') {
+                deleted = true;
+                cout << "\n\tProduct deleted successfully.";
+                continue;
+            }
+        }
+
+        temp << name << " " << productID << " " << batch << " "
+             << price << " " << qty << " " << expiry << endl;
+    }
+
+    file.close();
+    temp.close();
+
+    if (deleted) {
+        remove("inventory.txt");
+        rename("temp.txt", "inventory.txt");
+    } else {
+        remove("temp.txt");
+
+        if (!found) {
+            cout << "\n\tProduct not found.";
+        } else {
+            cout << "\n\tProduct was not deleted.";
+        }
     }
 
     cout << "\n\tPress any key to return to the menu.";
