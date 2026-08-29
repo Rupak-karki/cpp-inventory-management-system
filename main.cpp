@@ -7,6 +7,7 @@
 #include <cstdio>
 #include <sstream> 
 #include <ctime>  
+#include <cctype> // to classify and transform individual narrow characters.
 
 using namespace std;
 
@@ -16,7 +17,9 @@ void searchProduct();
 void updateProduct();
 void deleteProduct();
 void sellProduct();
-void checkExpiredProducts(); //for handling expired products
+void checkExpiredProducts(); 
+bool isValidNumber(const string& value, bool allowDecimal); // for checking number validation
+
 
 string name, productID, batch, price, qty, expiry;
 
@@ -111,9 +114,26 @@ void addProduct() {
 
     cout << "\tEnter price: ";
     cin >> price;
+    
+    // 1. Validate Price (Allows Decimals)
+    while (true) {
+        cout << "\tEnter price: ";
+        cin >> price;
+        if (isValidNumber(price, true)) {
+            break;
+        }
+        cout << "\t[!] Invalid price format! Use digits only (e.g., 12.50 or 99).\n";
+    }
 
-    cout << "\tEnter quantity: ";
-    cin >> qty;
+    // 2. Validate Quantity (Whole Numbers Only)
+    while (true) {
+        cout << "\tEnter quantity: ";
+        cin >> qty;
+        if (isValidNumber(qty, false)) {
+            break;
+        }
+        cout << "\t[!] Invalid quantity format! Use whole numbers only.\n";
+    }
 
     cout << "\tExpiry Date (yyyymmdd): ";
     cin >> expiry;
@@ -536,4 +556,25 @@ void checkExpiredProducts() {
 
     cout << "\n\tPress any key to return to the menu.";
     getch();
+}
+
+bool isValidNumber(const string& value, bool allowDecimal) {
+    if (value.empty()) {
+        return false;
+    }
+
+    bool hasDecimal = false;
+    bool hasDigit = false;
+
+    for (char character : value) {
+        if (isdigit(static_cast<unsigned char>(character))) {
+            hasDigit = true;
+        } else if (allowDecimal && character == '.' && !hasDecimal) {
+            hasDecimal = true;
+        } else {
+            return false;
+        }
+    }
+
+    return hasDigit;
 }
