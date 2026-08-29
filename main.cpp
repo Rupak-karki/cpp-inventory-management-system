@@ -222,10 +222,9 @@ void updateProduct() {
     system("cls");
 
     ifstream file("inventory.txt");
-    ofstream temp("temp.txt");     // Create a temporary file to stage our updated data
 
-    if (!file || !temp) {
-        cout << "\n\tUnable to open inventory files.";
+    if (!file) {
+        cout << "\n\tNo inventory file found.";
         cout << "\n\tPress any key to return to the menu.";
         getch();
         return;
@@ -234,18 +233,28 @@ void updateProduct() {
     string searchID;
     string newBatch, newPrice, newQty, newExpiry;
     bool found = false;
+    bool updated = false;
 
     cout << "\n\t==================== Update Product ====================\n";
     cout << "\n\tEnter Product ID to update: ";
     cin >> searchID;
 
+    ofstream temp("temp.txt");
+
+    if (!temp) {
+        cout << "\n\tUnable to create temporary file.";
+        cout << "\n\tPress any key to return to the menu.";
+        getch();
+        return;
+    }
+
     while (file >> name >> productID >> batch >> price >> qty >> expiry) {
-        if (productID == searchID) {
+        if (productID == searchID && !found) {
             found = true;
 
             cout << "\n\tCurrent product details\n";
             cout << "\tName: " << name << endl;
-            cout << "\tID: " << productID << endl;           
+            cout << "\tID: " << productID << endl;
             cout << "\tBatch: " << batch << endl;
             cout << "\tPrice: " << price << endl;
             cout << "\tQuantity: " << qty << endl;
@@ -265,6 +274,8 @@ void updateProduct() {
 
             temp << name << " " << productID << " " << newBatch << " "
                  << newPrice << " " << newQty << " " << newExpiry << endl;
+
+            updated = true;
         } else {
             temp << name << " " << productID << " " << batch << " "
                  << price << " " << qty << " " << expiry << endl;
@@ -273,13 +284,13 @@ void updateProduct() {
 
     file.close();
     temp.close();
-    
-    remove("inventory.txt");
-    rename("temp.txt", "inventory.txt");
 
-    if (found) {
+    if (updated) {
+        remove("inventory.txt");
+        rename("temp.txt", "inventory.txt");
         cout << "\n\tProduct updated successfully.";
     } else {
+        remove("temp.txt");
         cout << "\n\tProduct not found.";
     }
 
