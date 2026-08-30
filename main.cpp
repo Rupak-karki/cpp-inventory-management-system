@@ -112,9 +112,6 @@ void addProduct() {
 
     cout << "\tEnter batch number: ";
     cin >> batch;
-
-    cout << "\tEnter price: ";
-    cin >> price;
     
     // 1. Validate Price (Allows Decimals)
     while (true) {
