@@ -19,6 +19,7 @@ void deleteProduct();
 void sellProduct();
 void checkExpiredProducts(); 
 bool isValidNumber(const string& value, bool allowDecimal); // for checking number validation
+bool isValidExpiry(const string& value); //to check correct format of expiry
 
 
 string name, productID, batch, price, qty, expiry;
@@ -122,7 +123,7 @@ void addProduct() {
         if (isValidNumber(price, true)) {
             break;
         }
-        cout << "\t[!] Invalid price format! Use digits only (e.g., 12.50 or 99).\n";
+        cout << "\t Invalid price format! Use digits only (e.g., 12.50 or 99).\n";
     }
 
     // 2. Validate Quantity (Whole Numbers Only)
@@ -132,15 +133,28 @@ void addProduct() {
         if (isValidNumber(qty, false)) {
             break;
         }
-        cout << "\t[!] Invalid quantity format! Use whole numbers only.\n";
+        cout << "\t Invalid quantity format! Use whole numbers only.\n";
     }
 
-    cout << "\tExpiry Date (yyyymmdd): ";
-    cin >> expiry;
+ // Validate Expiry Date 
+    while (true) {
+        cout << "\tExpiry Date (yyyymmdd): ";
+        cin >> expiry;
+        
+        if (isValidExpiry(expiry)) {
+            break; 
+        }
+        
+        // Friendly inline error warning instead of returning to menu
+        cout << "\t Invalid expiry date. Use YYYYMMDD format (e.g., 20271231).\n";
+    }
+
+
 
     file << name << " " << productID << " " << batch << " "
          << price << " " << qty << " " << expiry << endl;
 
+   
     file.close();
 
     cout << "\n\tProduct added successfully.";
@@ -577,4 +591,8 @@ bool isValidNumber(const string& value, bool allowDecimal) {
     }
 
     return hasDigit;
+}
+
+bool isValidExpiry(const string& value) {
+    return value.length() == 8 && isValidNumber(value, false);
 }
