@@ -22,6 +22,7 @@ bool isValidNumber(const string& value, bool allowDecimal);
 bool isValidExpiry(const string& value); 
 bool productIdExists(const string& id); //to check unique id
 void showAlerts(); // to show inventory alerts
+int daysUntilExpiry(const string& value);
 
 
 string name, productID, batch, price, qty, expiry;
@@ -638,66 +639,154 @@ void showAlerts() {
         return;
     }
 
-    time_t now = time(0);
+    const int lowStockLimit = 5;
+    const int soonExpiryLimit = 30;
+    int lowStockCount = 0;
+    int soonExpiryCount = 0;
+    int expiredCount = 0;
+    int invalidDateCount = 0;
 
-    tm* currentTime = localtime(&now);
-    char currentDateText[9];
-    strftime(currentDateText, sizeof(currentDateText),
-             "%Y%m%d", currentTime);
+    cout << "\n\n\t+=========================================================+\n";
+    cout << "\t|                 INVENTORY ALERT CENTER                  |\n";
+    cout << "\t+=========================================================+\n";
+    cout << "\t| Low stock: 5 or fewer units                             |\n";
+    cout << "\t| Expiring soon: within the next 30 days                  |\n";
+    cout << "\t+=========================================================+\n";
 
-    string currentDate = currentDateText;
-
-    time_t futureTime = now + (30 * 24 * 60 * 60);
-    tm* futureDateTime = localtime(&futureTime);
-    char futureDateText[9];
-    strftime(futureDateText, sizeof(futureDateText),
-             "%Y%m%d", futureDateTime);
-
-    string futureDate = futureDateText;
-
-    bool alertFound = false;
-
-    cout << "\n\t================ Inventory Alerts ================\n";
+    cout << "\n\t[LOW STOCK PRODUCTS]\n";
+    cout << "\t----------------------------------------------------------\n";
+    cout << left << "\t" << setw(16) << "Product ID"
+         << setw(18) << "Name"
+         << setw(12) << "Quantity"
+         << "Batch" << endl;
+    cout << "\t----------------------------------------------------------\n";
 
     while (file >> name >> productID >> batch >> price >> qty >> expiry) {
         int availableQty = 0;
-        stringstream quantityStream(qty);
+        stringstream(qty) >> availableQty;
 
-        if (quantityStream >> availableQty) {
-            if (availableQty == 0) {
-                alertFound = true;
-                cout << "\n\tOUT OF STOCK: " << name
-                     << " | ID: " << productID
-                     << " | Batch: " << batch;
-            } else if (availableQty < 5) {
-                alertFound = true;
-                cout << "\n\tLOW STOCK: " << name
-                     << " | ID: " << productID
-                     << " | Remaining: " << availableQty;
-            }
+        if (availableQty <= lowStockLimit) {
+            lowStockCount++;
+            cout << left << "\t" << setw(16) << productID
+                 << setw(18) << name
+                 << setw(12) << availableQty
+                 << batch << endl;
         }
+    }
 
-        if (isValidExpiry(expiry)) {
-            if (expiry < currentDate) {
-                alertFound = true;
-                cout << "\n\tEXPIRED: " << name
-                     << " | ID: " << productID
-                     << " | Expiry: " << expiry;
-            } else if (expiry <= futureDate) {
-                alertFound = true;
-                cout << "\n\tEXPIRING SOON: " << name
-                     << " | ID: " << productID
-                     << " | Expiry: " << expiry;
-            }
+    if (lowStockCount == 0) {
+        cout << "\tNo low-stock products found.\n";
+    }
+
+    file.clear();
+    file.seekg(0, ios::beg);
+
+    cout << "\n\t[PRODUCTS EXPIRING SOON]\n";
+    cout << "\t----------------------------------------------------------\n";
+    cout << left << "\t" << setw(16) << "Product ID"
+         << setw(18) << "Name"
+         << setw(14) << "Expiry Date"
+         << "Days Left" << endl;
+    cout << "\t----------------------------------------------------------\n";
+
+    while (file >> name >> productID >> batch >> price >> qty >> expiry) {
+        int daysLeft = daysUntilExpiry(expiry);
+
+        if (daysLeft >= 0 && daysLeft <= soonExpiryLimit) {
+            soonExpiryCount++;
+            cout << left << "\t" << setw(16) << productID
+                 << setw(18) << name
+                 << setw(14) << expiry
+                 << daysLeft << endl;
         }
+    }
+
+    if (soonExpiryCount == 0) {
+        cout << "\tNo products are expiring within 30 days.\n";
+    }
+
+    file.clear();
+    file.seekg(0, ios::beg);
+
+    cout << "\n\t[EXPIRED PRODUCTS]\n";
+    cout << "\t----------------------------------------------------------\n";
+    cout << left << "\t" << setw(16) << "Product ID"
+         << setw(18) << "Name"
+         << setw(14) << "Expiry Date"
+         << "Batch" << endl;
+    cout << "\t----------------------------------------------------------\n";
+
+    while (file >> name >> productID >> batch >> price >> qty >> expiry) {
+        int daysLeft = daysUntilExpiry(expiry);
+
+        if (daysLeft == -99999) {
+            invalidDateCount++;
+        } else if (daysLeft < 0) {
+            expiredCount++;
+            cout << left << "\t" << setw(16) << productID
+                 << setw(18) << name
+                 << setw(14) << expiry
+                 << batch << endl;
+        }
+    }
+
+    if (expiredCount == 0) {
+        cout << "\tNo expired products found.\n";
     }
 
     file.close();
 
-    if (!alertFound) {
-        cout << "\n\tNo inventory alerts at the moment.";
+    cout << "\n\t[ALERT SUMMARY]\n";
+    cout << "\t----------------------------------------------------------\n";
+    cout << "\tLow-stock products       : " << lowStockCount << endl;
+    cout << "\tExpiring within 30 days  : " << soonExpiryCount << endl;
+    cout << "\tExpired products         : " << expiredCount << endl;
+
+    if (invalidDateCount > 0) {
+        cout << "\tInvalid expiry entries   : " << invalidDateCount << endl;
     }
 
-    cout << "\n\n\tPress any key to return to the menu.";
+    if (lowStockCount == 0 && soonExpiryCount == 0 && expiredCount == 0) {
+        cout << "\n\tInventory status: All clear.\n";
+    } else {
+        cout << "\n\tInventory status: Attention required.\n";
+    }
+
+    cout << "\n\tPress any key to return to the menu.";
     getch();
+}
+
+int daysUntilExpiry(const string& value) {
+    if (!isValidExpiry(value)) {
+        return -99999;
+    }
+
+    int year = atoi(value.substr(0, 4).c_str());
+    int month = atoi(value.substr(4, 2).c_str());
+    int day = atoi(value.substr(6, 2).c_str());
+
+    if (month < 1 || month > 12 || day < 1 || day > 31) {
+        return -99999;
+    }
+
+    tm expiryTime = {};
+    expiryTime.tm_year = year - 1900;
+    expiryTime.tm_mon = month - 1;
+    expiryTime.tm_mday = day;
+    expiryTime.tm_hour = 12;
+
+    time_t expiryValue = mktime(&expiryTime);
+
+    if (expiryValue == -1) {
+        return -99999;
+    }
+
+    time_t now = time(0);
+    tm* currentTime = localtime(&now);
+    currentTime->tm_hour = 12;
+    currentTime->tm_min = 0;
+    currentTime->tm_sec = 0;
+    time_t currentValue = mktime(currentTime);
+
+    return static_cast<int>(difftime(expiryValue, currentValue) / (60 * 60 * 24));
 }
