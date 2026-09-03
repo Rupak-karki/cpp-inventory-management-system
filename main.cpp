@@ -638,43 +638,66 @@ void showAlerts() {
         return;
     }
 
-    const int lowStockLimit = 5;
     time_t now = time(0);
+
     tm* currentTime = localtime(&now);
-    char currentDate[9];
-    strftime(currentDate, sizeof(currentDate), "%Y%m%d", currentTime);
+    char currentDateText[9];
+    strftime(currentDateText, sizeof(currentDateText),
+             "%Y%m%d", currentTime);
+
+    string currentDate = currentDateText;
+
+    time_t futureTime = now + (30 * 24 * 60 * 60);
+    tm* futureDateTime = localtime(&futureTime);
+    char futureDateText[9];
+    strftime(futureDateText, sizeof(futureDateText),
+             "%Y%m%d", futureDateTime);
+
+    string futureDate = futureDateText;
 
     bool alertFound = false;
 
-    cout << "\n\t==================== Inventory Alerts ====================\n";
+    cout << "\n\t================ Inventory Alerts ================\n";
 
     while (file >> name >> productID >> batch >> price >> qty >> expiry) {
         int availableQty = 0;
-        stringstream(qty) >> availableQty;
+        stringstream quantityStream(qty);
 
-        if (availableQty <= lowStockLimit) {
-            alertFound = true;
-            cout << "\n\tLow stock alert";
-            cout << "\n\tProduct ID: " << productID;
-            cout << "\n\tProduct Name: " << name;
-            cout << "\n\tQuantity Remaining: " << availableQty << endl;
+        if (quantityStream >> availableQty) {
+            if (availableQty == 0) {
+                alertFound = true;
+                cout << "\n\tOUT OF STOCK: " << name
+                     << " | ID: " << productID
+                     << " | Batch: " << batch;
+            } else if (availableQty < 5) {
+                alertFound = true;
+                cout << "\n\tLOW STOCK: " << name
+                     << " | ID: " << productID
+                     << " | Remaining: " << availableQty;
+            }
         }
 
-        if (expiry < currentDate) {
-            alertFound = true;
-            cout << "\n\tExpired product alert";
-            cout << "\n\tProduct ID: " << productID;
-            cout << "\n\tProduct Name: " << name;
-            cout << "\n\tExpiry Date: " << expiry << endl;
+        if (isValidExpiry(expiry)) {
+            if (expiry < currentDate) {
+                alertFound = true;
+                cout << "\n\tEXPIRED: " << name
+                     << " | ID: " << productID
+                     << " | Expiry: " << expiry;
+            } else if (expiry <= futureDate) {
+                alertFound = true;
+                cout << "\n\tEXPIRING SOON: " << name
+                     << " | ID: " << productID
+                     << " | Expiry: " << expiry;
+            }
         }
-    }
-
-    if (!alertFound) {
-        cout << "\n\tNo low-stock or expired-product alerts.";
     }
 
     file.close();
 
-    cout << "\n\tPress any key to return to the menu.";
+    if (!alertFound) {
+        cout << "\n\tNo inventory alerts at the moment.";
+    }
+
+    cout << "\n\n\tPress any key to return to the menu.";
     getch();
 }
