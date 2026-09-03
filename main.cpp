@@ -20,7 +20,8 @@ void sellProduct();
 void checkExpiredProducts(); 
 bool isValidNumber(const string& value, bool allowDecimal); 
 bool isValidExpiry(const string& value); 
-bool productIdExists(const string& id); //to check unique id 
+bool productIdExists(const string& id); //to check unique id
+void showAlerts(); // to show inventory alerts
 
 
 string name, productID, batch, price, qty, expiry;
@@ -40,14 +41,15 @@ int main() {
         cout << "\n\t5. Delete Product";
         cout << "\n\t6. Sell Product"; 
         cout << "\n\t7. Check & Remove Expired Products";
-        cout << "\n\t8. Exit";
+        cout << "\n\t8. View Inventory Alerts";
+        cout << "\n\t9. Exit";
         cout << "\n\n\tChoose an option: ";
 
         if (!(cin >> choice)) {
             cin.clear();
             cin.ignore(10000, '\n');
 
-            cout << "\n\tInvalid input! Please enter a number 1-8.\n";
+            cout << "\n\tInvalid input! Please enter a number 1-9.\n";
             cout << "\n\tPress any key to return to the menu...";
             getch();
             continue;
@@ -81,6 +83,10 @@ int main() {
                 checkExpiredProducts();
                 break;
             case 8:
+                showAlerts();
+                break;
+
+            case 9:
                 cout << "\n\tExiting program...\n";
                 return 0;
 
@@ -619,3 +625,8 @@ bool productIdExists(const string& id) {
     return false; // ID is completely unique
 }
 
+
+void showAlerts() {
+	
+    
+}
