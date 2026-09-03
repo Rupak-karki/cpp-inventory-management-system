@@ -769,7 +769,7 @@ int daysUntilExpiry(const string& value) {
         return -99999;
     }
 
-    tm expiryTime = {};
+    tm expiryTime = tm();
     expiryTime.tm_year = year - 1900;
     expiryTime.tm_mon = month - 1;
     expiryTime.tm_mday = day;
