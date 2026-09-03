@@ -18,8 +18,9 @@ void updateProduct();
 void deleteProduct();
 void sellProduct();
 void checkExpiredProducts(); 
-bool isValidNumber(const string& value, bool allowDecimal); // for checking number validation
-bool isValidExpiry(const string& value); //to check correct format of expiry
+bool isValidNumber(const string& value, bool allowDecimal); 
+bool isValidExpiry(const string& value); 
+bool productIdExists(const string& id); //to check unique id 
 
 
 string name, productID, batch, price, qty, expiry;
@@ -107,33 +108,40 @@ void addProduct() {
     cout << "\n\tEnter product name: ";
     cin >> name;
 
-    cout << "\n\tProduct ID: ";
-    cin >> productID;
+    // Validate Unique Product ID using the helper function
+    while (true) {
+        cout << "\tProduct ID: ";
+        cin >> productID;
+        if (!productIdExists(productID)) {
+            break; // Exit loop if the ID is unique and safe to use
+        }
+        cout << "\t  Error: Product ID '" << productID << "' already exists! Try another.\n";
+    }
 
     cout << "\tEnter batch number: ";
     cin >> batch;
     
-    // 1. Validate Price (Allows Decimals)
+    // 1. Validate Price Loop (Allows Decimals)
     while (true) {
         cout << "\tEnter price: ";
         cin >> price;
         if (isValidNumber(price, true)) {
             break;
         }
-        cout << "\t Invalid price format! Use digits only (e.g., 12.50 or 99).\n";
+        cout << "\t  Invalid price format! Use digits only (e.g., 12.50 or 99).\n";
     }
 
-    // 2. Validate Quantity (Whole Numbers Only)
+    // 2. Validate Quantity Loop (Whole Numbers Only)
     while (true) {
         cout << "\tEnter quantity: ";
         cin >> qty;
         if (isValidNumber(qty, false)) {
             break;
         }
-        cout << "\t Invalid quantity format! Use whole numbers only.\n";
+        cout << "\t  Invalid quantity format! Use whole numbers only.\n";
     }
 
- // Validate Expiry Date 
+    // 3. Validate Expiry Date Loop (Exactly 8 Digits)
     while (true) {
         cout << "\tExpiry Date (yyyymmdd): ";
         cin >> expiry;
@@ -141,23 +149,20 @@ void addProduct() {
         if (isValidExpiry(expiry)) {
             break; 
         }
-        
-        // Friendly inline error warning instead of returning to menu
-        cout << "\t Invalid expiry date. Use YYYYMMDD format (e.g., 20271231).\n";
+        cout << "\t  Invalid expiry date. Use YYYYMMDD format (e.g., 20271231).\n";
     }
 
-
-
+    // Write the validated clean fields to file
     file << name << " " << productID << " " << batch << " "
          << price << " " << qty << " " << expiry << endl;
 
-   
     file.close();
 
     cout << "\n\tProduct added successfully.";
     cout << "\n\tPress any key to return to the menu.";
     getch();
 }
+
 
 void viewInventory() {
     system("cls");
@@ -593,3 +598,24 @@ bool isValidNumber(const string& value, bool allowDecimal) {
 bool isValidExpiry(const string& value) {
     return value.length() == 8 && isValidNumber(value, false);
 }
+
+bool productIdExists(const string& id) {
+    ifstream file("inventory.txt");
+    if (!file) {
+        return false; // If file doesn't exist yet, the ID cannot exist
+    }
+
+    // Temporary local variables to safely read the file line by line
+    string sName, sID, sBatch, sPrice, sQty, sExpiry;
+
+    while (file >> sName >> sID >> sBatch >> sPrice >> sQty >> sExpiry) {
+        if (sID == id) {
+            file.close(); // Close the file stream immediately on match
+            return true;  // ID found!
+        }
+    }
+
+    file.close(); // Close the file stream if no match is found
+    return false; // ID is completely unique
+}
+
