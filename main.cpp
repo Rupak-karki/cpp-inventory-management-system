@@ -627,6 +627,54 @@ bool productIdExists(const string& id) {
 
 
 void showAlerts() {
-	
-    
+    system("cls");
+
+    ifstream file("inventory.txt");
+
+    if (!file) {
+        cout << "\n\tNo inventory file found.";
+        cout << "\n\tPress any key to return to the menu.";
+        getch();
+        return;
+    }
+
+    const int lowStockLimit = 5;
+    time_t now = time(0);
+    tm* currentTime = localtime(&now);
+    char currentDate[9];
+    strftime(currentDate, sizeof(currentDate), "%Y%m%d", currentTime);
+
+    bool alertFound = false;
+
+    cout << "\n\t==================== Inventory Alerts ====================\n";
+
+    while (file >> name >> productID >> batch >> price >> qty >> expiry) {
+        int availableQty = 0;
+        stringstream(qty) >> availableQty;
+
+        if (availableQty <= lowStockLimit) {
+            alertFound = true;
+            cout << "\n\tLow stock alert";
+            cout << "\n\tProduct ID: " << productID;
+            cout << "\n\tProduct Name: " << name;
+            cout << "\n\tQuantity Remaining: " << availableQty << endl;
+        }
+
+        if (expiry < currentDate) {
+            alertFound = true;
+            cout << "\n\tExpired product alert";
+            cout << "\n\tProduct ID: " << productID;
+            cout << "\n\tProduct Name: " << name;
+            cout << "\n\tExpiry Date: " << expiry << endl;
+        }
+    }
+
+    if (!alertFound) {
+        cout << "\n\tNo low-stock or expired-product alerts.";
+    }
+
+    file.close();
+
+    cout << "\n\tPress any key to return to the menu.";
+    getch();
 }
